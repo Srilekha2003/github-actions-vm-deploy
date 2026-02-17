@@ -1,4 +1,4 @@
-name: CI/CD Pipeline
+name: Deploy to VM
 
 on:
   push:
@@ -6,38 +6,19 @@ on:
       - main
 
 jobs:
-  build-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Code
+      - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '18'
-
-      - name: Install Dependencies
-        run: npm install
-
-      - name: Run Application Test
-        run: |
-          node index.js &
-          sleep 5
-          kill $!
-
-      - name: Deploy to VM via SSH
-        uses: appleboy/ssh-action@master
+      - name: Deploy to VM
+        uses: appleboy/ssh-action@v0.1.6
         with:
           host: ${{ secrets.VM_HOST }}
           username: ${{ secrets.VM_USER }}
           key: ${{ secrets.VM_SSH_KEY }}
           script: |
-            if [ ! -d "app" ]; then
-              git clone https://github.com/YOUR_USERNAME/YOUR_REPO.git app
-            fi
-            cd app
-            git pull origin main
-            npm install
-            pm2 restart index.js || pm2 start index.js
+            cd /home/${{ secrets.VM_USER }}
+            git pull
